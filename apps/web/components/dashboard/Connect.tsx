@@ -17,7 +17,7 @@ export default function Connect() {
 
       <CardContent>
         <Button asChild>
-          <Link href="/dashboard/connect" className="inline-flex items-center gap-1">
+          <Link href="/dashboard/connect" className="inline-flex items-center gap-1 px-4!">
             <Link2 className="h-4 w-4"/>
             Connect a provider
           </Link>

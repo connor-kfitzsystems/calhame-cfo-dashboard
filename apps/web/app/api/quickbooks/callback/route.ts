@@ -1,5 +1,10 @@
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
+import { auth } from "@clerk/nextjs/server";
+import { storeCompany } from "@/lib/queries/quickbooks/store-company";
+import { getCompanyName } from "@/lib/queries/quickbooks/get-company-name";
+import { storeAccountingConnection } from "@/lib/queries/store-accounting-connection";
+import { storeCompanyMembership } from "@/lib/queries/store-company-membership";
 
 const clientId = process.env.QUICKBOOKS_CLIENT_ID!;
 const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET!;
@@ -9,11 +14,14 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
 
+  const { userId: clerkUserId } = await auth();
+
   const cookieStore = await cookies()
 
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const storedState = cookieStore.get("qb_oauth_state")?.value;
+  const realmId = searchParams.get("realmId");
 
   if (!code) {
     return Response.json({ error: "Missing authorization code" }, { status: 400 });
@@ -21,6 +29,14 @@ export async function GET(req: NextRequest) {
 
   if (!state || !storedState || state !== storedState) {
     return Response.json({ error: "Invalid state" }, { status: 400 });
+  }
+
+  if (!realmId) {
+    return Response.json({ error: "Missing realmId" }, { status: 400 });
+  }
+  
+  if (!clerkUserId) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   cookieStore.delete("qb_oauth_state");
@@ -55,17 +71,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // const data = await response.json();
+    const data = await response.json();
 
-    // TODO:
-    // - Save access_token + refresh_token in DB (encrypted)
-    // - Associate with current user
-    // - Store realmId if needed (QuickBooks also sends this in query params)
+    const accessTokenExpiresAt = new Date(Date.now() + data.expires_in * 1000);
+    const refreshTokenExpiresAt = new Date(Date.now() + data.x_refresh_token_expires_in * 1000);
 
-    // access_token: data.access_token,
-    // refresh_token: data.refresh_token,
-    // expires_in: data.expires_in
-
+    const companyName = await getCompanyName(realmId, data.access_token);
+    const company = await storeCompany(realmId, companyName);
+    await storeCompanyMembership(clerkUserId, company.id, "member");
+    await storeAccountingConnection(
+      realmId, "quickbooks", data.access_token,
+      data.refresh_token, accessTokenExpiresAt, refreshTokenExpiresAt
+    );
+    
     return Response.redirect(
       "http://localhost:3000/dashboard/connect",
       302
