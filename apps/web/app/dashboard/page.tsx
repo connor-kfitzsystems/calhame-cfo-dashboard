@@ -2,23 +2,26 @@ import DashboardHeader from "@/components/shared/DashboardHeader";
 import Connect from "@/components/dashboard/Connect";
 import Alert from "@/components/shared/Alert";
 
-import { headers } from "next/headers";
+import { getCompaniesByUser } from "@/lib/queries/companies/get-companies-by-user";
+import { auth } from "@clerk/nextjs/server";
+import { getUserByClerkId } from "@/lib/queries/users/get-user-by-clerk-id";
 
 export default async function DashboardPage() {
 
-  const headerPayload = await headers();
-  const cookie = headerPayload.get("cookie") ?? "";
+  const { userId: clerkId } = await auth();
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/companies`, {
-    headers: {
-      cookie
-    },
-    cache: "no-store"
-  });
+  if (!clerkId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  if (!response.ok) throw new Error("Failed to fetch companies");
+  const userResult = await getUserByClerkId(clerkId);
 
-  const companies = await response.json();
+  if (userResult.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const userId = userResult[0].id as string;
+  const companies = await getCompaniesByUser(userId);
 
   return (
     <main className="w-full overflow-y-auto p-4 lg:p-8">
