@@ -9,3 +9,8 @@ export type CompanyListItem = {
   companyName: string;
   providerName: string;
 }
+
+export type ErrorDialog = {
+  title: string;
+  message: string;
+}

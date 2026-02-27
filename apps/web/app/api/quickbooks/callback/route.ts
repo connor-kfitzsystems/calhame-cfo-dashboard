@@ -90,6 +90,8 @@ export async function GET(req: NextRequest) {
         accessTokenExpiresAt, refreshTokenExpiresAt, client
       );
 
+      // Todo: Start Sync Job Here
+
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK");

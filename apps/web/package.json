@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.37.5",
     "@clerk/themes": "^2.4.53",
+    "@repo/shared": "*",
     "bullmq": "^5.70.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -23,8 +24,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "svix": "^1.85.0",
-    "tailwind-merge": "^3.4.1",
-    "@repo/shared": "*"
+    "tailwind-merge": "^3.4.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
