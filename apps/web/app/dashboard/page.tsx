@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   return (
     <main className="w-full overflow-y-auto p-4 lg:p-8">
       <DashboardHeader title="Dashboard" description="Overview of your financial performance"/>
-      <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
         {companies.length === 0
           ? <Connect/>
           : <Alert

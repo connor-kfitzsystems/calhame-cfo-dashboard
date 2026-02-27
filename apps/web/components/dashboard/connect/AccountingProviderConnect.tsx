@@ -111,7 +111,7 @@ export default function AccountingProviderConnect({ provider, companies }: Accou
                     variant="outline"
                     size="sm"
                   >
-                    <Link2Off className="mr-1 h-4 w-4" />
+                    <Link2Off className="mr-1 h-4 w-4"/>
                     Disconnect
                   </Button>
                 </li>
