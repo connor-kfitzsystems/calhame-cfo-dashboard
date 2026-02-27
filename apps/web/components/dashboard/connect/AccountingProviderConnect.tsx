@@ -3,10 +3,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { AccountingProvider, CompanyListItem, ErrorDialog } from "@repo/shared";
 import { Link2, Link2Off } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface AccountingProviderConnectProps {
   provider: AccountingProvider;
@@ -15,12 +17,15 @@ interface AccountingProviderConnectProps {
 }
 
 export default function AccountingProviderConnect({ provider, companies, setErrorDialog }: AccountingProviderConnectProps) {
-  
+	const [loadingDisconnect, setLoadingDisconnect] = useState<string>("");
+
   const connected = companies.length > 0;
   const providerCapitalized = capitalizeFirstLetter(provider);
   const router = useRouter();
 
   async function handleDisconnect(companyMembershipId: string, companyName: string) {
+		if (loadingDisconnect) return;
+		setLoadingDisconnect(companyMembershipId);
     try {
       const res = await fetch(`/api/company-memberships/${companyMembershipId}`, {
         method: 'DELETE',
@@ -34,8 +39,10 @@ export default function AccountingProviderConnect({ provider, companies, setErro
       console.error(err);
       setErrorDialog({
         title: "Disconnection Failed",
-        message: `An error occurred while disconnecting ${companyName}. Please try again later.`
+				message: `An error occurred while disconnecting ${companyName}. Please try again later.`
       });
+		} finally {
+      setLoadingDisconnect("");
     }
   }
 
@@ -75,9 +82,16 @@ export default function AccountingProviderConnect({ provider, companies, setErro
                   variant="outline"
                   size="sm"
                   onClick={() => handleDisconnect(company.companyMembershipId, company.companyName)}
-                >
+                  disabled={Boolean(loadingDisconnect)}
+                      >
                   <Link2Off className="mr-1 h-4 w-4"/>
-                  Disconnect
+                  {loadingDisconnect === company.companyMembershipId
+                    ? <>
+                        <Spinner className="ml-1" />
+                        <span className="sr-only">Disconnecting</span>
+                      </>
+                    : "Disconnect"
+                  }
                 </Button>
               </li>
             ))}
