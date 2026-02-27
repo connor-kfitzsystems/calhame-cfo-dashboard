@@ -11,7 +11,7 @@ export default async function DashboardConnectPage() {
 
   const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/companies`, {
     headers: {
-      cookie,
+      cookie
     },
     cache: "no-store"
   });

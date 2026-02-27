@@ -9,6 +9,7 @@ import { capitalizeFirstLetter } from "@/lib/utils";
 import { AccountingProvider, CompanyListItem } from "@repo/shared";
 import { Link2, Link2Off, RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface AccountingProviderConnectProps {
   provider: AccountingProvider;
@@ -23,8 +24,9 @@ export default function AccountingProviderConnect({ provider, companies }: Accou
 
   const providerCapitalized = capitalizeFirstLetter(provider);
 
+  const router = useRouter();
+
   async function handleConnect() {
-    // Todo: Implement real connection logic with Microservice and Provider OAuth flow
     setIsConnecting(true);
     setError("");
 
@@ -42,6 +44,22 @@ export default function AccountingProviderConnect({ provider, companies }: Accou
       setError(`Unable to connect to ${providerCapitalized}.`);
     } finally {
       setIsConnecting(false);
+    }
+  }
+
+  async function handleDisconnect(companyMembershipId: string, companyName: string) {
+    try {
+      const res = await fetch(`/api/company-memberships/${companyMembershipId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!res.ok) throw new Error(`Failed to disconnect ${companyName}. Status: ${res.status}`);
+      
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      setError(`Unable to disconnect from ${providerCapitalized}.`);
     }
   }
 
@@ -110,6 +128,7 @@ export default function AccountingProviderConnect({ provider, companies }: Accou
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => handleDisconnect(company.companyMembershipId, company.companyName)}
                   >
                     <Link2Off className="mr-1 h-4 w-4"/>
                     Disconnect

@@ -5,6 +5,7 @@ export type UpdateProfileForm = {
 export type AccountingProvider = "quickbooks";
 
 export type CompanyListItem = {
+  companyMembershipId: string;
   companyName: string;
   providerName: string;
 }

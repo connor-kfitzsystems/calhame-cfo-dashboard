@@ -6,6 +6,7 @@ export async function getCompaniesByUser(userId: string, client?: PoolClient) {
 
 	const userCompaniesResult = await database.query(
 		`SELECT
+			  cm.id AS "companyMembershipId",
         c.name AS "companyName",
         ap.display_name AS "providerName"
       FROM company_memberships cm
