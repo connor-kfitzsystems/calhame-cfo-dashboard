@@ -3,3 +3,8 @@ export type UpdateProfileForm = {
 }
 
 export type AccountingProvider = "quickbooks";
+
+export type CompanyListItem = {
+  companyName: string;
+  providerName: string;
+}

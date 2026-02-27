@@ -14,10 +14,13 @@ CREATE TABLE users (
 
 CREATE TABLE companies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id TEXT UNIQUE NOT NULL,
+    provider_company_id TEXT NOT NULL,
+    provider_id TEXT NOT NULL REFERENCES accounting_providers(id),
     name TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now()
+    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+
+    UNIQUE(provider_company_id, provider_id)
 );
 
 CREATE TABLE company_memberships (
@@ -40,8 +43,7 @@ CREATE TABLE accounting_providers (
 
 CREATE TABLE accounting_connections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    provider_id TEXT NOT NULL REFERENCES accounting_providers(id),
+    company_id UUID UNIQUE NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
 
     access_token TEXT NOT NULL,
     refresh_token TEXT,
@@ -52,7 +54,6 @@ CREATE TABLE accounting_connections (
 
     last_synced_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
 
-    UNIQUE(company_id, provider_id),
 );

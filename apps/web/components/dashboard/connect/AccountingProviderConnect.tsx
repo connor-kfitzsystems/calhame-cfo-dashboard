@@ -6,17 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { capitalizeFirstLetter } from "@/lib/utils";
-import { AccountingProvider } from "@repo/shared";
+import { AccountingProvider, CompanyListItem } from "@repo/shared";
 import { Link2, Link2Off, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 interface AccountingProviderConnectProps {
   provider: AccountingProvider;
+  companies: CompanyListItem[];
 }
 
-export default function AccountingProviderConnect({ provider }: AccountingProviderConnectProps) {
+export default function AccountingProviderConnect({ provider, companies }: AccountingProviderConnectProps) {
 
-  const [connected, setConnected] = useState(false);
+  const connected = companies.length > 0;
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -36,19 +37,12 @@ export default function AccountingProviderConnect({ provider }: AccountingProvid
 
       if (!res.ok) throw new Error(`Failed to connect to ${providerCapitalized}. Status: ${res.status}`);
      
-      setConnected(true);
     } catch (err) {
       console.error(err);
       setError(`Unable to connect to ${providerCapitalized}.`);
-      setConnected(false);
     } finally {
       setIsConnecting(false);
     }
-  }
-
-  function handleDisconnect() {
-    setConnected(false);
-    setError("");
   }
 
   return (
@@ -107,16 +101,26 @@ export default function AccountingProviderConnect({ provider }: AccountingProvid
               </Button>
             )
           ) : (
-            <div className="flex gap-3">
-              <Button variant="outline" size="sm">
-                <RefreshCw className="mr-1 h-4 w-4"/>
-                Sync Now
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                <Link2Off className="mr-1 h-4 w-4"/>
-                Disconnect
-              </Button>
-            </div>
+            <ul className="flex flex-col gap-2 w-full">
+              {companies.map((company) => (
+                <li key={company.companyName} className="flex items-center justify-between gap-3 rounded-md bg-secondary/50 py-2 px-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{company.companyName}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Link2Off className="mr-1 h-4 w-4" />
+                    Disconnect
+                  </Button>
+                </li>
+              ))}
+
+              {error ? (
+                <p className="text-sm text-destructive">{error}</p>
+              ) : null}
+            </ul>
           )}
         </div>
       </CardContent>

@@ -83,10 +83,10 @@ export async function GET(req: NextRequest) {
     try {
       await client.query("BEGIN");
 
-      const company = await storeCompany(realmId, companyName, client);
+      const company = await storeCompany(realmId, companyName, "quickbooks", client);
       await storeCompanyMembership(clerkUserId, company.id, "member", client);
       await storeAccountingConnection(
-        realmId, "quickbooks", data.access_token, data.refresh_token,
+        company.id, data.access_token, data.refresh_token,
         accessTokenExpiresAt, refreshTokenExpiresAt, client
       );
 
