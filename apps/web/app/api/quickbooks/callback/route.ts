@@ -8,7 +8,7 @@ import { storeAccountingConnection } from "@/lib/queries/store-accounting-connec
 import { storeCompanyMembership } from "@/lib/queries/store-company-membership";
 import { getUserByClerkId } from "@/lib/queries/users/get-user-by-clerk-id";
 import { accountingQueue } from "@/lib/accounting-queue";
-import { SYNC_COMPANY_JOB } from "@repo/shared";
+import { ENTITIES, SYNC_COMPANY_JOB } from "@repo/shared";
 import { getIdByDisplayName } from "@/lib/queries/providers/get-id-by-display-name";
 import { storeSyncState } from "@/lib/queries/provider-sync-state/store-sync-state";
 
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
         accessTokenExpiresAt, refreshTokenExpiresAt, client
       );
 
-      await storeSyncState(accountingConnection.id, "accounting", client);
+      storeSyncState(accountingConnection.id, ENTITIES, client)
 
       if (!company.id || !providerId) {
         return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });

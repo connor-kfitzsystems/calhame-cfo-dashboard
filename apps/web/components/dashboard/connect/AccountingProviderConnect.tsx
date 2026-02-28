@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { capitalizeFirstLetter } from "@/lib/utils";
-import { AccountingProvider, CompanyListItem, ErrorDialog } from "@repo/shared";
+import { AccountingProvider, CompanyListItem, ENTITIES, ErrorDialog } from "@repo/shared";
 import { CloudSync, Link2, Link2Off } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -51,7 +51,7 @@ export default function AccountingProviderConnect({ provider, companies, setErro
 			const res = await fetch("/api/microservice/sync-company", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ companyId, provider }),
+				body: JSON.stringify({ companyId, provider, entities: ENTITIES }),
 			});
 
 			if (!res.ok) {

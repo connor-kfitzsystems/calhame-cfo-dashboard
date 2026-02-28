@@ -6,3 +6,5 @@ export type AccountingConnectionRow = {
   accessTokenExpiresAt: Date | null;
   refreshTokenExpiresAt: Date | null;
 }
+
+export type Entity = "revenue" | "cogs" | "expenses";
