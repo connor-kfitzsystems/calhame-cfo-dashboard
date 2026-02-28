@@ -16,9 +16,5 @@ export async function storeCompany(providerCompanyId: string, name: string, prov
     [providerCompanyId, name, providerId]
   );
 
-  if (result.rowCount === 0) {
-    throw new Error("Failed to store company");
-  }
-
   return result.rows[0];
 }

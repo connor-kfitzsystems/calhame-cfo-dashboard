@@ -8,6 +8,10 @@ export async function getUserByClerkId(clerkId: string, client?: PoolClient) {
     `SELECT id FROM users WHERE clerk_id = $1`,
     [clerkId]
   );
+
+  if (userResult.rowCount === 0) {
+    throw new Error("User not found");
+  }
   
   return userResult.rows;
 }

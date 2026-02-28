@@ -14,11 +14,6 @@ export default async function DashboardPage() {
   if (!clerkId) redirect("/sign-in");
   
   const userResult = await getUserByClerkId(clerkId);
-
-  if (userResult.length === 0) {
-    throw new Error("User not found");
-  }
-
   const userId = userResult[0].id as string;
   const companies = await getCompaniesByUser(userId);
 

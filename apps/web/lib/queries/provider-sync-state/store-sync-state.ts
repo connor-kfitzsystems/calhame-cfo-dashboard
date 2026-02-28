@@ -15,9 +15,5 @@ export async function storeSyncState(connectionId: string, entityType: string, c
     [connectionId, entityType]
   );
 
-  if (result.rowCount === 0) {
-    throw new Error("Failed to store sync state");
-  }
-
   return result.rows[0];
 }
