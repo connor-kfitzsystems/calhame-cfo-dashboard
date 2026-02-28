@@ -5,10 +5,13 @@ export async function POST(req: Request) {
   const { companyId, provider } = await req.json();
 
   if (!companyId || !provider) {
-    return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
+    return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
   }
 
   const job = await accountingQueue.add(SYNC_COMPANY_JOB, { companyId, provider });
   
-  return new Response(JSON.stringify({ message: 'Job queued', jobId: job.id }), { status: 200 });
+  return Response.json(
+    { data: { jobId: job.id } },
+    { status: 201 }
+  );
 }

@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { pool } from "@/lib/db";
@@ -25,24 +25,29 @@ export async function GET(req: NextRequest) {
   const realmId = searchParams.get("realmId");
 
   if (!code) {
-    return Response.json({ error: "Missing authorization code" }, { status: 400 });
+    return Response.json({ error: { message: "Missing authorization code" } }, { status: 400 });
   }
 
   if (!state || !storedState || state !== storedState) {
-    return Response.json({ error: "Invalid state" }, { status: 400 });
+    cookieStore.delete("qb_oauth_state");
+    return Response.json({ error: { message: "Invalid state" } }, { status: 400 });
   }
 
   if (!realmId) {
-    return Response.json({ error: "Missing realmId" }, { status: 400 });
+    return Response.json({ error: { message: "Missing realmId" } }, { status: 400 });
   }
   
   if (!clerkUserId) {
-    return Response.json({ error: "Not authenticated" }, { status: 401 });
+    return Response.json({ error: { message: "Not authenticated" } }, { status: 401 });
   }
 
   cookieStore.delete("qb_oauth_state");
 
   try {
+    if (!clientId || !clientSecret || !redirectUri) {
+      throw new Error("Missing QuickBooks OAuth environment variables");
+    }
+
     const body = new URLSearchParams({
       grant_type: "authorization_code",
       code,
@@ -67,7 +72,7 @@ export async function GET(req: NextRequest) {
       const errorText = await response.text();
       console.error("Token exchange failed:", errorText);
       return Response.json(
-        { error: "Failed to exchange code for tokens" },
+        { error: { message: "Failed to exchange code for tokens" } },
         { status: 500 }
       );
     }
@@ -100,13 +105,12 @@ export async function GET(req: NextRequest) {
       client.release();
     }
     
-    return Response.redirect(
-      "http://localhost:3000/dashboard/connect",
-      302
-    );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("Callback error:", message, err);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    const { origin } = new URL(req.url);
+    const redirectUrl = `${origin}/dashboard/connect`;
+
+    return NextResponse.redirect(redirectUrl);
+  } catch (error) {
+    console.error("Callback error:", error);
+    return Response.json({ error: { message: "Internal server error" } }, { status: 500 });
   }
 }
