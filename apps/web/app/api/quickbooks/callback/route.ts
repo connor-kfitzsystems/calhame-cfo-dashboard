@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
         return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
       }
     
-      await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, providerId: providerId });
+      await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, provider: "quickbooks" });
 
       await client.query("COMMIT");
     } catch (error) {

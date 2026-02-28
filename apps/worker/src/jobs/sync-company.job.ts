@@ -3,20 +3,20 @@ import { syncQuickBooksCompany } from '../services/quickbooks.service';
 
 interface SyncCompanyJobData {
   companyId: string;
-  providerId: string;
+  provider: string;
 }
 
 export async function handleSyncCompany(job: Job<SyncCompanyJobData>) {
-  const { companyId, providerId } = job.data;
+  const { companyId, provider } = job.data;
 
-  console.log(`Processing sync job for ${companyId} via ${providerId}`);
+  console.log(`Processing sync job for ${companyId} via ${provider}`);
 
-  switch (providerId) {
+  switch (provider) {
     case 'quickbooks':
       await syncQuickBooksCompany(companyId);
       break;
 
     default:
-      throw new Error(`Unsupported provider: ${providerId}`);
+      throw new Error(`Unsupported provider: ${provider}`);
   }
 }

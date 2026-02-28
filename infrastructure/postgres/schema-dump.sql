@@ -68,3 +68,33 @@ CREATE TABLE provider_sync_state (
 
     UNIQUE(connection_id, entity_type)
 );
+
+-- Entities Layer --
+
+CREATE TABLE revenue (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL REFERENCES companies(id),
+    source TEXT NOT NULL,
+    amount NUMERIC NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE cogs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL REFERENCES companies(id),
+    description TEXT,
+    amount NUMERIC NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE expenses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL REFERENCES companies(id),
+    category TEXT NOT NULL,
+    vendor TEXT,
+    amount NUMERIC NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);

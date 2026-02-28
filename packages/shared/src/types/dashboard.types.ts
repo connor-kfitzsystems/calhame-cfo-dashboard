@@ -6,6 +6,7 @@ export type AccountingProvider = "quickbooks";
 
 export type CompanyListItem = {
   companyMembershipId: string;
+  companyId: string;
   companyName: string;
   providerName: string;
 }

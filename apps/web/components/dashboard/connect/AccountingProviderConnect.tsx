@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Spinner } from "@/components/ui/spinner";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { AccountingProvider, CompanyListItem, ErrorDialog } from "@repo/shared";
-import { Link2, Link2Off } from "lucide-react";
+import { CloudSync, Link2, Link2Off } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -46,6 +46,26 @@ export default function AccountingProviderConnect({ provider, companies, setErro
     }
   }
 
+	async function handleSync(companyId: string, provider: string, companyName: string) {
+    try {
+			const res = await fetch("/api/microservice/sync-company", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ companyId, provider }),
+			});
+
+			if (!res.ok) {
+				throw new Error(`Failed to sync ${companyName}. Status: ${res.status}`);
+			}
+		} catch (err) {
+			console.error(err);
+			setErrorDialog({
+				title: "Sync Request Failed",
+				message: `An error occurred while starting a sync for ${companyName}. Please try again later.`
+			});
+		}
+	}
+
   return (
     <Card className="border-border shadow-sm">
       <CardHeader>
@@ -78,21 +98,32 @@ export default function AccountingProviderConnect({ provider, companies, setErro
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{company.companyName}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDisconnect(company.companyMembershipId, company.companyName)}
-                  disabled={Boolean(loadingDisconnect)}
-                      >
-                  <Link2Off className="mr-1 h-4 w-4"/>
-                  {loadingDisconnect === company.companyMembershipId
-                    ? <>
-                        <Spinner className="ml-1" />
-                        <span className="sr-only">Disconnecting</span>
-                      </>
-                    : "Disconnect"
-                  }
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDisconnect(company.companyMembershipId, company.companyName)}
+                    disabled={Boolean(loadingDisconnect)}
+                  >
+                    <Link2Off className="mr-1 h-4 w-4" />
+                    {loadingDisconnect === company.companyMembershipId
+                      ? <>
+                          <Spinner className="ml-1" />
+                          <span className="sr-only">Disconnecting</span>
+                        </>
+                      : "Disconnect"
+                    }
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSync(company.companyId, provider, company.companyName)}
+                    disabled={Boolean(loadingDisconnect)}
+                  >
+                    <CloudSync className="mr-1 h-4 w-4"/>
+                    Sync
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
