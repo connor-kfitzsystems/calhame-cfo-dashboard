@@ -46,7 +46,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               axisLine={false}
               tick={{ dy: 10 }}
             />
-            <YAxis className="text-xs" tickLine={false} axisLine={false} tick={{ dy: 5 }}/>
+            <YAxis className="text-xs" tickLine={false} axisLine={false} tick={{ dx: -10 }}/>
             <ChartTooltip content={<ChartTooltipContent/>}/>
             <Line
               type="monotone"
