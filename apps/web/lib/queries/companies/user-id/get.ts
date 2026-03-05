@@ -4,7 +4,7 @@ import type { PoolClient } from "pg";
 export default async function getCompaniesByUser(userId: string, client?: PoolClient) {
 	const database = client ?? pool;
 
-	const result = await database.query(`
+  const result = await database.query(`
     SELECT
       cm.id AS "companyMembershipId",
       c.id AS "companyId",

@@ -1,5 +1,3 @@
-import getCompaniesByUser from "../companies/user-id/get";
-import getUserByClerkId from "../users/clerk-id/get";
 import getBurn from "./get-burn";
 import getCogs from "./get-cogs";
 import getOpexCompChartData from "./get-opex-comp-chart-data";
@@ -14,27 +12,21 @@ import { DashboardData, Quarter } from "@repo/shared";
 import { getAverageMonthlyBurn, getBurnEfficency, getCogsPercentageOfRevenue, getExpensePercentageOfOpex, getGrossMarginPercentage, getNetProfitLoss, getOpexRevenueRatio, getProfit } from "@/lib/accounting-formulas";
 import { getDateRangeFromQuarter } from "@/lib/helpers";
 
-export default async function getDashboardData(clerkId: string, quarter: Quarter, year: number): Promise<DashboardData> {
+export default async function getDashboardData(companyId: string, quarter: Quarter, year: number): Promise<DashboardData> {
 
   const { startDate, endDate, monthsInPeriod } = getDateRangeFromQuarter(quarter, year);
 
-  const userResult = await getUserByClerkId(clerkId);
-  const userId = userResult.id as string;
+  const totalRevenueResult = await getRevenue(companyId, startDate, endDate);
+  const totalCogsResult = await getCogs(companyId, startDate, endDate);
+  const totalOpexResult = await getTotalOpex(companyId, startDate, endDate);
+  const burnResult = await getBurn(companyId, startDate, endDate);
+  const topExpenseResult = await getTopExpense(companyId, startDate, endDate);
 
-  const companyMembershipResults = await getCompaniesByUser(userId);
-  const companyIds = companyMembershipResults.map((membership) => membership.companyId);
-
-  const totalRevenueResult = await getRevenue(companyIds[0], startDate, endDate);
-  const totalCogsResult = await getCogs(companyIds[0], startDate, endDate);
-  const totalOpexResult = await getTotalOpex(companyIds[0], startDate, endDate);
-  const burnResult = await getBurn(companyIds[0], startDate, endDate);
-  const topExpenseResult = await getTopExpense(companyIds[0], startDate, endDate);
-
-  const revenueExpenseChartData = await getRevenueExpenseChartData(companyIds[0], startDate, endDate);
-  const opexCompChartData = await getOpexCompChartData(companyIds[0], startDate, endDate);
+  const revenueExpenseChartData = await getRevenueExpenseChartData(companyId, startDate, endDate);
+  const opexCompChartData = await getOpexCompChartData(companyId, startDate, endDate);
   
-  const yearsResult = await getYears(companyIds[0]);
-  const quarters = await getQuarters(companyIds[0], year);
+  const yearsResult = await getYears(companyId);
+  const quarters = await getQuarters(companyId, year);
 
   return {
     years: yearsResult,
@@ -85,7 +77,6 @@ export default async function getDashboardData(clerkId: string, quarter: Quarter
       }
     ],
     revenueExpenseChartData: revenueExpenseChartData,
-    opexCompChartData: opexCompChartData,
-    companies: companyMembershipResults
+    opexCompChartData: opexCompChartData
   }
 }

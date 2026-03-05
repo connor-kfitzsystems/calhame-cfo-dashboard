@@ -20,7 +20,6 @@ export type DashboardData = {
   years: number[];
   quarters: Quarter[];
   infoCards: InfoCardData[];
-  companies: string[];
   revenueExpenseChartData: RevenueExpenseChartData[];
   opexCompChartData: OpexCompChartData[];
 }
