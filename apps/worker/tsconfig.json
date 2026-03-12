@@ -7,8 +7,5 @@
     "target": "ES2022",
     "noEmit": false
   },
-  "include": [
-    "src",
-    "../../packages/shared/src"
-  ]
+  "include": ["src"]
 }
