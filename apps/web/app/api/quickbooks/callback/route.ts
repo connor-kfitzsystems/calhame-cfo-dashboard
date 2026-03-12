@@ -116,7 +116,13 @@ export async function GET(req: NextRequest) {
         return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
       }
     
-      await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, provider: "quickbooks" });
+      await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, provider: "quickbooks" }, {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 60000
+        }
+      });
 
       await client.query("COMMIT");
     } catch (error) {

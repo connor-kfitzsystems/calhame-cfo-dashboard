@@ -32,7 +32,25 @@ worker.on('completed', job => {
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`Job ${job?.id} failed:`, err);
+  if (!job) {
+    console.error('Job failed with no job data:', err);
+    return;
+  }
+
+  const attemptInfo = `attempt ${job.attemptsMade}/${job.opts.attempts || 1}`;
+  const isLastAttempt = job.attemptsMade >= (job.opts.attempts || 1);
+  
+  if (isLastAttempt) {
+    console.error(`[FINAL FAILURE] Job ${job.id} exhausted all retries (${attemptInfo})`, {
+      jobId: job.id,
+      jobName: job.name,
+      jobData: job.data,
+      error: err.message,
+      stack: err.stack
+    });
+  } else {
+    console.warn(`[RETRY PENDING] Job ${job.id} failed (${attemptInfo}):`, err.message);
+  }
 });
 
 console.log('Worker running...');

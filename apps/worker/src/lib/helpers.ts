@@ -1,3 +1,5 @@
+import { withRetry } from "./retry-helper.js";
+
 export function getRequiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -16,21 +18,31 @@ export async function quickbooksRequest(
   accessToken: string,
   path: string
 ) {
-  const baseUrl = getRequiredEnv("QUICKBOOKS_BASE_URL").replace(/\/$/, "");
-  const url = `${baseUrl}/v3/company/${realmId}/${path}`;
+  return withRetry(async () => {
+    const baseUrl = getRequiredEnv("QUICKBOOKS_BASE_URL").replace(/\/$/, "");
+    const url = `${baseUrl}/v3/company/${realmId}/${path}`;
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: "application/json"
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json"
+      }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      const error = new Error(`QuickBooks request failed: ${res.status} ${text}`) as Error & { status?: number };
+      error.status = res.status;
+      throw error;
+    }
+
+    return res.json();
+  }, {
+    maxAttempts: 3,
+    baseDelayMs: 1000,
+    onRetry: (error, attempt, delayMs) => {
+      console.log(`[QuickBooks API] Retry attempt ${attempt}/3 for ${path} after ${delayMs}ms. Error: ${error.message}`);
     }
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`QuickBooks request failed: ${res.status} ${text}`);
-  }
-
-  return res.json();
 }

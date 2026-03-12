@@ -1,5 +1,6 @@
 import { Entity } from "@repo/shared";
 import { getRequiredEnv, isExpiringSoon, quickbooksRequest } from "../../lib/helpers.js";
+import { withRetry } from "../../lib/retry-helper.js";
 import { getAccountingConnectionByCompanyId } from "../../lib/queries/accounting_connections/get-accounting-connection-by-company-id.js";
 import { markAccountingConnectionSynced } from "../../lib/queries/accounting_connections/mark-accounting-connection-synced.js";
 import { updateAccountingConnectionById } from "../../lib/queries/accounting_connections/update-accounting-connection-by-id.js";
@@ -55,50 +56,60 @@ export async function syncQuickBooksCompany(companyId: string, entities: Entity[
 }
 
 async function refreshQuickBooksAccessToken(refreshToken: string) {
-  const clientId = getRequiredEnv("QUICKBOOKS_CLIENT_ID");
-  const clientSecret = getRequiredEnv("QUICKBOOKS_CLIENT_SECRET");
+  return withRetry(async () => {
+    const clientId = getRequiredEnv("QUICKBOOKS_CLIENT_ID");
+    const clientSecret = getRequiredEnv("QUICKBOOKS_CLIENT_SECRET");
 
-  const body = new URLSearchParams({
-    grant_type: "refresh_token",
-    refresh_token: refreshToken,
-  });
+    const body = new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken
+    });
 
-  const response = await fetch(
-    "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
-    {
-      method: "POST",
-      headers: {
-        Authorization:
-          "Basic " + Buffer.from(`${clientId}:${clientSecret}`).toString("base64"),
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: body.toString(),
+    const response = await fetch(
+      "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+      {
+        method: "POST",
+        headers: {
+          Authorization:
+            "Basic " + Buffer.from(`${clientId}:${clientSecret}`).toString("base64"),
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: body.toString()
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      const error = new Error(`QuickBooks token refresh failed: ${errorText}`) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
     }
-  );
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`QuickBooks token refresh failed: ${errorText}`);
-  }
+    const data = (await response.json()) as {
+      access_token: string;
+      refresh_token?: string;
+      expires_in: number;
+      x_refresh_token_expires_in?: number;
+    }
 
-  const data = (await response.json()) as {
-    access_token: string;
-    refresh_token?: string;
-    expires_in: number;
-    x_refresh_token_expires_in?: number;
-  }
+    const accessTokenExpiresAt = new Date(Date.now() + data.expires_in * 1000);
+    const refreshTokenExpiresAt = data.x_refresh_token_expires_in
+      ? new Date(Date.now() + data.x_refresh_token_expires_in * 1000)
+      : null;
 
-  const accessTokenExpiresAt = new Date(Date.now() + data.expires_in * 1000);
-  const refreshTokenExpiresAt = data.x_refresh_token_expires_in
-    ? new Date(Date.now() + data.x_refresh_token_expires_in * 1000)
-    : null;
-
-  return {
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token ?? refreshToken,
-    accessTokenExpiresAt,
-    refreshTokenExpiresAt
-  }
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token ?? refreshToken,
+      accessTokenExpiresAt,
+      refreshTokenExpiresAt
+    }
+  }, {
+    maxAttempts: 3,
+    baseDelayMs: 1000,
+    onRetry: (error, attempt, delayMs) => {
+      console.log(`[QuickBooks Token Refresh] Retry attempt ${attempt}/3 after ${delayMs}ms. Error: ${error.message}`);
+    }
+  });
 }
 
 async function prepareQuickBooksTokensAndVerifyCompany(row: any) {
@@ -177,18 +188,26 @@ async function prepareQuickBooksTokensAndVerifyCompany(row: any) {
 }
 
 async function fetchQuickBooksCompanyInfo(realmId: string, accessToken: string) {
-  const baseUrl = getRequiredEnv("QUICKBOOKS_BASE_URL").replace(/\/$/, "");
-  const url = `${baseUrl}/v3/company/${realmId}/companyinfo/${realmId}`;
+  return withRetry(async () => {
+    const baseUrl = getRequiredEnv("QUICKBOOKS_BASE_URL").replace(/\/$/, "");
+    const url = `${baseUrl}/v3/company/${realmId}/companyinfo/${realmId}`;
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: "application/json"
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json"
+      }
+    });
+
+    return res;
+  }, {
+    maxAttempts: 3,
+    baseDelayMs: 1000,
+    onRetry: (error, attempt, delayMs) => {
+      console.log(`[QuickBooks CompanyInfo] Retry attempt ${attempt}/3 after ${delayMs}ms. Error: ${error.message}`);
     }
   });
-
-  return res;
 }
 
 async function fetchProfitAndLoss(

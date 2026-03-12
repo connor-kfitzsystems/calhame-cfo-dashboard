@@ -8,7 +8,13 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
   }
 
-  const job = await accountingQueue.add(SYNC_COMPANY_JOB, { companyId, provider, entities });
+  const job = await accountingQueue.add(SYNC_COMPANY_JOB, { companyId, provider, entities }, {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 60000
+    }
+  });
   
   return Response.json(
     { data: { jobId: job.id } },
