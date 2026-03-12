@@ -8,6 +8,7 @@
     "noEmit": false
   },
   "include": [
-    "src"
+    "src",
+    "../../packages/shared/src"
   ]
 }
