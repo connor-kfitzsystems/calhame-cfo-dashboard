@@ -34,7 +34,7 @@ export default async function DynamicDashboardPage({ params, searchParams }: {
 
   return (
     <main className="w-full overflow-y-auto p-4 lg:p-8">
-      <DashboardHeader title="Executive P&L" description={`Period: ${year}`}/>
+      <DashboardHeader title="Executive P&L" description={`Period: ${yearValue}`}/>
       {!hasData
         ? <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
             <NoDataAvailable 
