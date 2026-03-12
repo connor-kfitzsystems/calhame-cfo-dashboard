@@ -1,5 +1,5 @@
 import { PoolClient } from "pg";
-import { pool } from "../../db";
+import { pool } from "../../db.js";
 
 export async function upsertCogs(
   companyId: string,

@@ -1,5 +1,5 @@
 import { Job } from 'bullmq';
-import { syncQuickBooksCompany } from '../services/quickbooks/quickbooks.service';
+import { syncQuickBooksCompany } from '../services/quickbooks/quickbooks.service.js';
 import { Entity } from '@repo/shared';
 
 interface SyncCompanyJobData {

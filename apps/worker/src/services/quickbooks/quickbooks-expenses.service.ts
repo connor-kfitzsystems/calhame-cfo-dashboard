@@ -1,5 +1,5 @@
-import { upsertExpenses } from "../../lib/queries/expenses/upsert-expenses";
-import { upsertProviderSyncStateLastSynced } from "../../lib/queries/provider_sync_state/upsert-provider-sync-state-last-synced";
+import { upsertExpenses } from "../../lib/queries/expenses/upsert-expenses.js";
+import { upsertProviderSyncStateLastSynced } from "../../lib/queries/provider_sync_state/upsert-provider-sync-state-last-synced.js";
 
 // Todo: Fix any types and clean this file up
 

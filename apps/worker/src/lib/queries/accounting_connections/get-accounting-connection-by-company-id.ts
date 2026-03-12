@@ -1,5 +1,5 @@
 import { PoolClient } from "pg";
-import { pool } from "../../db";
+import { pool } from "../../db.js";
 import { AccountingConnectionRow } from "@repo/shared";
 
 export async function getAccountingConnectionByCompanyId(companyId: string, client?: PoolClient) {

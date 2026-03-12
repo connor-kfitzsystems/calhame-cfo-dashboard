@@ -1,6 +1,6 @@
 import { PoolClient } from "pg";
-import { pool } from "../../db";
-import { encryptTokenForStorage } from "../../token-crypto";
+import { pool } from "../../db.js";
+import { encryptTokenForStorage } from "../../token-crypto.js";
 
 export async function updateAccountingConnectionById(id: string, currentAccessToken: string, currentRefreshToken: string | null, currentAccessTokenExpiresAt: Date, currentRefreshTokenExpiresAt: Date | null, client?: PoolClient) {
   const databbase = client ?? pool;

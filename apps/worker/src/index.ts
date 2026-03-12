@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { Worker } from 'bullmq';
-import { redisConnection } from './lib/redis';
-import { handleSyncCompany } from './jobs/sync-company.job';
+import { redisConnection } from './lib/redis.js';
+import { handleSyncCompany } from './jobs/sync-company.job.js';
 import { ACCOUNTING_QUEUE, SYNC_COMPANY_JOB } from '@repo/shared';
 
 console.log('Worker starting...');

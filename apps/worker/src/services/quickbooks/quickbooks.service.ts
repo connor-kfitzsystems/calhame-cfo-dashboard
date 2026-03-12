@@ -1,12 +1,12 @@
 import { Entity } from "@repo/shared";
-import { getRequiredEnv, isExpiringSoon, quickbooksRequest } from "../../lib/helpers";
-import { getAccountingConnectionByCompanyId } from "../../lib/queries/accounting_connections/get-accounting-connection-by-company-id";
-import { markAccountingConnectionSynced } from "../../lib/queries/accounting_connections/mark-accounting-connection-synced";
-import { updateAccountingConnectionById } from "../../lib/queries/accounting_connections/update-accounting-connection-by-id";
-import { decryptTokenFromStorage } from "../../lib/token-crypto";
-import { syncRevenue } from "./quickbooks-revenue.service";
-import { syncCogs } from "./quickbooks-cogs.service";
-import { syncExpenses } from "./quickbooks-expenses.service";
+import { getRequiredEnv, isExpiringSoon, quickbooksRequest } from "../../lib/helpers.js";
+import { getAccountingConnectionByCompanyId } from "../../lib/queries/accounting_connections/get-accounting-connection-by-company-id.js";
+import { markAccountingConnectionSynced } from "../../lib/queries/accounting_connections/mark-accounting-connection-synced.js";
+import { updateAccountingConnectionById } from "../../lib/queries/accounting_connections/update-accounting-connection-by-id.js";
+import { decryptTokenFromStorage } from "../../lib/token-crypto.js";
+import { syncRevenue } from "./quickbooks-revenue.service.js";
+import { syncCogs } from "./quickbooks-cogs.service.js";
+import { syncExpenses } from "./quickbooks-expenses.service.js";
 
 export async function syncQuickBooksCompany(companyId: string, entities: Entity[]) {
   console.log(`Starting QuickBooks sync for company ${companyId}, entities ${entities}...`);

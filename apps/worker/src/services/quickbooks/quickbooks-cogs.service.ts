@@ -1,5 +1,5 @@
-import { upsertCogs } from "../../lib/queries/cogs/upsert-cogs";
-import { upsertProviderSyncStateLastSynced } from "../../lib/queries/provider_sync_state/upsert-provider-sync-state-last-synced";
+import { upsertCogs } from "../../lib/queries/cogs/upsert-cogs.js";
+import { upsertProviderSyncStateLastSynced } from "../../lib/queries/provider_sync_state/upsert-provider-sync-state-last-synced.js";
 
 // Todo: Fix any types and clean this file up
 
