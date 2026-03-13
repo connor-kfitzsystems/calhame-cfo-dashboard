@@ -110,13 +110,15 @@ export async function GET(req: NextRequest) {
         accessTokenExpiresAt, refreshTokenExpiresAt, client
       );
 
-      upsertSyncState(accountingConnection.id, ENTITIES, client)
+      for (const entity of ENTITIES) {
+        await upsertSyncState(accountingConnection.id, entity, client);
+      }
 
       if (!company.id || !provider.id) {
         return new Response(JSON.stringify({ error: { message: 'Missing parameters' } }), { status: 400 });
       }
     
-      await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, provider: "quickbooks" }, {
+      await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, provider: "quickbooks", entities: ENTITIES }, {
         attempts: 3,
         backoff: {
           type: 'exponential',

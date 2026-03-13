@@ -2,7 +2,7 @@ import { Entity } from "@repo/shared";
 import { pool } from "../../db";
 import type { PoolClient } from "pg";
 
-export default async function upsertSyncState(connectionId: string, entities: Entity[], client?: PoolClient) {
+export default async function upsertSyncState(connectionId: string, entity: Entity, client?: PoolClient) {
   const database = client ?? pool;
 
   const result = await database.query(`
@@ -17,7 +17,7 @@ export default async function upsertSyncState(connectionId: string, entities: En
     ON CONFLICT (connection_id, entity_type)
     DO NOTHING
     RETURNING *;
-  `, [connectionId, entities]);
+  `, [connectionId, entity]);
 
   return result.rows[0];
 }

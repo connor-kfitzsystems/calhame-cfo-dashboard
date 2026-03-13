@@ -95,7 +95,7 @@ CREATE TABLE revenue (
 
 CREATE TABLE cogs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
     description TEXT,
     amount NUMERIC NOT NULL,
     date DATE NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE cogs (
 
 CREATE TABLE expenses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id UUID NOT NULL REFERENCES companies(id),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
     category TEXT NOT NULL,
     vendor TEXT,
     amount NUMERIC NOT NULL,
