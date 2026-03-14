@@ -111,3 +111,158 @@ CREATE TABLE expenses (
     date DATE NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
+
+-- This allows storing individual transactions with accurate dates instead of P&L summaries
+
+-- Revenue Transactions (Invoices, Sales Receipts, Payments)
+CREATE TABLE IF NOT EXISTS revenue_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+
+    -- Provider identification
+    provider_id TEXT NOT NULL REFERENCES accounting_providers(id),
+
+    -- Provider identifiers
+    provider_transaction_id TEXT NOT NULL,
+    provider_transaction_type TEXT NOT NULL,
+    transaction_number TEXT,
+    transaction_date DATE NOT NULL,
+
+    -- Business data
+    customer_id TEXT,
+    customer_name TEXT,
+    description TEXT,
+    
+    -- Accounting
+    account_id TEXT,
+    account_name TEXT,
+    amount NUMERIC(18,2) NOT NULL,
+    currency_code TEXT DEFAULT 'USD',
+    
+    -- Provider-specific metadata (JSON for flexible storage)
+    provider_metadata JSONB,
+
+    -- Metadata
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+
+    CONSTRAINT revenue_transactions_unique 
+        UNIQUE (company_id, provider_id, provider_transaction_id, provider_transaction_type)
+);
+
+-- COGS Transactions (Bills, Purchases related to cost of goods)
+CREATE TABLE IF NOT EXISTS cogs_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+
+    -- Provider identification
+    provider_id TEXT NOT NULL REFERENCES accounting_providers(id),
+
+    -- Provider identifiers
+    provider_transaction_id TEXT NOT NULL,
+    provider_transaction_type TEXT NOT NULL,
+    transaction_number TEXT,
+    transaction_date DATE NOT NULL,
+
+    -- Business data
+    vendor_id TEXT,
+    vendor_name TEXT,
+    description TEXT,
+    
+    -- Accounting
+    account_id TEXT,
+    account_name TEXT,
+    amount NUMERIC(18,2) NOT NULL,
+    currency_code TEXT DEFAULT 'USD',
+    
+    -- Provider-specific metadata (JSON for flexible storage)
+    provider_metadata JSONB,
+
+    -- Metadata
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+
+    CONSTRAINT cogs_transactions_unique 
+        UNIQUE (company_id, provider_id, provider_transaction_id, provider_transaction_type)
+);
+
+-- Expense Transactions (Expenses, Checks, Credit Card Charges)
+CREATE TABLE IF NOT EXISTS expense_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+
+    -- Provider identification
+    provider_id TEXT NOT NULL REFERENCES accounting_providers(id),
+
+    -- Provider identifiers
+    provider_transaction_id TEXT NOT NULL,
+    provider_transaction_type TEXT NOT NULL,
+    transaction_number TEXT,
+    transaction_date DATE NOT NULL,
+
+    -- Business data
+    vendor_id TEXT,
+    vendor_name TEXT,
+    category TEXT,
+    description TEXT,
+    
+    -- Accounting
+    account_id TEXT,
+    account_name TEXT,
+    amount NUMERIC(18,2) NOT NULL,
+    currency_code TEXT DEFAULT 'USD',
+    
+    -- Provider-specific metadata (JSON for flexible storage)
+    provider_metadata JSONB,
+
+    -- Metadata
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+
+    CONSTRAINT expense_transactions_unique 
+        UNIQUE (company_id, provider_id, provider_transaction_id, provider_transaction_type)
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_revenue_transactions_date 
+    ON revenue_transactions(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_revenue_transactions_company 
+    ON revenue_transactions(company_id);
+CREATE INDEX IF NOT EXISTS idx_revenue_transactions_company_date 
+    ON revenue_transactions(company_id, transaction_date);
+
+CREATE INDEX IF NOT EXISTS idx_cogs_transactions_date 
+    ON cogs_transactions(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_cogs_transactions_company 
+    ON cogs_transactions(company_id);
+CREATE INDEX IF NOT EXISTS idx_cogs_transactions_company_date 
+    ON cogs_transactions(company_id, transaction_date);
+
+CREATE INDEX IF NOT EXISTS idx_expense_transactions_date 
+    ON expense_transactions(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_expense_transactions_company 
+    ON expense_transactions(company_id);
+CREATE INDEX IF NOT EXISTS idx_expense_transactions_company_date 
+    ON expense_transactions(company_id, transaction_date);
+
+-- Trigger to auto-update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_revenue_transactions_updated_at 
+    BEFORE UPDATE ON revenue_transactions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_cogs_transactions_updated_at 
+    BEFORE UPDATE ON cogs_transactions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_expense_transactions_updated_at 
+    BEFORE UPDATE ON expense_transactions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+

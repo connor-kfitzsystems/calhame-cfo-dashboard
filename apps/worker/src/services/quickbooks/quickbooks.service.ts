@@ -8,6 +8,9 @@ import { decryptTokenFromStorage } from "../../lib/token-crypto.js";
 import { syncRevenue } from "./quickbooks-revenue.service.js";
 import { syncCogs } from "./quickbooks-cogs.service.js";
 import { syncExpenses } from "./quickbooks-expenses.service.js";
+import { syncInvoices } from "./quickbooks-invoice.service.js";
+import { syncExpenses as syncExpenseTransactions } from "./quickbooks-expense.service.js";
+import { syncBills } from "./quickbooks-bill.service.js";
 
 export async function syncQuickBooksCompany(companyId: string, entities: Entity[]) {
   console.log(`Starting QuickBooks sync for company ${companyId}, entities ${entities}...`);
@@ -23,6 +26,7 @@ export async function syncQuickBooksCompany(companyId: string, entities: Entity[
 
   await companyInfoRes.json();
 
+  // Todo: Implement pagination and update date ranges
   const startDate = "2024-01-01";
   const endDate = new Date().toISOString().split("T")[0] as string;
 
@@ -37,12 +41,15 @@ export async function syncQuickBooksCompany(companyId: string, entities: Entity[
     switch (entity) {
       case "revenue":
         await syncRevenue(companyId, row, endDate, pnl);
+        await syncInvoices(companyId, row.providerId, row.realmId, currentAccessToken, startDate, endDate);
         break;
       case "cogs":
         await syncCogs(companyId, row, endDate, pnl);
+        await syncBills(companyId, row.providerId, row.realmId, currentAccessToken, startDate, endDate);
         break;
       case "expenses":
         await syncExpenses(companyId, row, endDate, pnl);
+        await syncExpenseTransactions(companyId, row.providerId, row.realmId, currentAccessToken, startDate, endDate);
         break;
       default:
         console.error(`Unknown entity type: ${entity}`);

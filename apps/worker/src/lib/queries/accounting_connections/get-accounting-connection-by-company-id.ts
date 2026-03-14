@@ -8,6 +8,8 @@ export async function getAccountingConnectionByCompanyId(companyId: string, clie
   const connectionResult = await databbase.query<AccountingConnectionRow>(
     `SELECT
         ac.id AS "connectionId",
+        c.id AS "companyId",
+        c.provider_id AS "providerId",
         c.provider_company_id AS "realmId",
         ac.access_token AS "accessToken",
         ac.refresh_token AS "refreshToken",
