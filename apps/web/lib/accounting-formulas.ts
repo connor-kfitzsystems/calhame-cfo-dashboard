@@ -1,10 +1,10 @@
 export function getCogsPercentageOfRevenue(cogs: number, revenue: number): number {
-  if (revenue === 0) return 0;
+  if (revenue == 0) return 0;
   return parseFloat(((cogs / revenue) * 100).toFixed(2));
 }
 
 export function getGrossMarginPercentage(cogs: number, revenue: number): number {
-  if (revenue === 0) return 0;
+  if (revenue == 0) return 0;
   return parseFloat((((revenue - cogs) / revenue) * 100).toFixed(2));
 }
 
@@ -17,7 +17,7 @@ export function getNetProfitLoss(revenue: number, cogs: number, opex: number): n
 }
 
 export function getBurnEfficency(totalOpex: number, totalRevenue: number): string {
-  if (totalRevenue === 0) return "";
+  if (totalRevenue == 0) return "";
   const efficiency = totalOpex / totalRevenue;
   if (efficiency <= 0.6) return "Low Burn";
   if (efficiency <= 1) return "Medium Burn";
@@ -25,7 +25,7 @@ export function getBurnEfficency(totalOpex: number, totalRevenue: number): strin
 }
 
 export function getOpexRevenueRatio(totalOpex: number, totalRevenue: number): number {
-  if (totalRevenue === 0) return 0;
+  if (totalRevenue == 0) return 0;
   return parseFloat(((totalOpex / totalRevenue) * 100).toFixed(2));
 }
 

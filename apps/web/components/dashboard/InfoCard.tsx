@@ -10,7 +10,7 @@ interface InfoCardProps {
 
 export default function InfoCard({ title, value, info, className }: InfoCardProps) {
   return (
-    <Card className={cx(className, "gap-1")}>
+    <Card className={cx(className, "gap-1 h-full")}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>

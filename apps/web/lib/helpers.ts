@@ -80,7 +80,7 @@ export function buildInfoCards(
     cards.push({
       title: "Total Opex",
       value: `$${totalOpexResult}`,
-      info: `${getBurnEfficency(totalOpexResult, totalRevenueResult)} Burn`
+      info: `${getBurnEfficency(totalOpexResult, totalRevenueResult)}`
     });
   }
 

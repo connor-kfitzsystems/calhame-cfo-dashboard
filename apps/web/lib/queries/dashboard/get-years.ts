@@ -13,7 +13,7 @@ export default async function getYears(companyId: string, client?: PoolClient): 
       UNION ALL
       SELECT transaction_date FROM expense_transactions WHERE company_id = $1
     ) AS all_dates
-    ORDER BY year DESC;
+    ORDER BY year ASC;
   `, [companyId]);
 
   return result.rows.map(row => row.year);
