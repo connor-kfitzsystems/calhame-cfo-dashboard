@@ -44,7 +44,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Revenue vs OpEx</CardTitle>
+        <CardTitle>Revenue vs Expenses</CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={config} className="h-[300px] w-full">
