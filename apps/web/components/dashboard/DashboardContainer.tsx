@@ -1,8 +1,8 @@
 import InfoCard from "./InfoCard";
 import QuarterSelection from "./QuarterSelection";
 import YearSelection from "./YearSelection";
-import RevenueChart from "./RevenueChart";
-import OpexPieChart from "./OpexPieChart";
+import OpexCompositionCard from "./charts/OpexCompositionCard";
+import RevenueExpenseCard from "./charts/RevenueExpenseCard";
 
 import { DashboardData, Quarter } from "@repo/shared";
 
@@ -32,8 +32,8 @@ export default function DashboardContainer({ data, quarter, year }: DashboardCon
         ))}
       </ul>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <RevenueChart data={data.revenueExpenseChartData}/>
-        <OpexPieChart data={data.opexCompChartData}/>
+        <RevenueExpenseCard data={data.revenueExpenseChartData}/>
+        <OpexCompositionCard data={data.opexCompChartData}/>
       </div>
     </div>
   );

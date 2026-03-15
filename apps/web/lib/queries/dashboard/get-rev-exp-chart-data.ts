@@ -17,7 +17,7 @@ export default async function getRevenueExpenseChartData(companyId: string, star
       SELECT
         DATE_TRUNC('month', COALESCE(r.transaction_date, e.transaction_date)) AS month,
         SUM(r.amount) AS revenue,
-        SUM(e.amount) AS opex
+        SUM(e.amount) AS expenses
       FROM revenue_transactions r
       FULL OUTER JOIN expense_transactions e
         ON DATE_TRUNC('month', r.transaction_date) = DATE_TRUNC('month', e.transaction_date)
@@ -32,7 +32,7 @@ export default async function getRevenueExpenseChartData(companyId: string, star
     SELECT
       EXTRACT(MONTH FROM m.month) AS month,
       a.revenue,
-      a.opex
+      a.expenses
     FROM months m
     LEFT JOIN agg a ON m.month = a.month
     ORDER BY m.month;

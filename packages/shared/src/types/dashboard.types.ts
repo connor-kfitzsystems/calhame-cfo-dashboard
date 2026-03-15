@@ -34,7 +34,7 @@ export type InfoCardData = {
 export type RevenueExpenseChartData = {
   month: string;
   revenue: number | null;
-  opex: number | null;
+  expenses: number | null;
 }
 
 export type OpexCompChartData = {
