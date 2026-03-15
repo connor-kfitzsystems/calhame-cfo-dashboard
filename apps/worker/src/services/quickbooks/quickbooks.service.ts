@@ -5,9 +5,6 @@ import { getAccountingConnectionByCompanyId } from "../../lib/queries/accounting
 import { markAccountingConnectionSynced } from "../../lib/queries/accounting_connections/mark-accounting-connection-synced.js";
 import { updateAccountingConnectionById } from "../../lib/queries/accounting_connections/update-accounting-connection-by-id.js";
 import { decryptTokenFromStorage } from "../../lib/token-crypto.js";
-import { syncRevenue } from "./quickbooks-revenue.service.js";
-import { syncCogs } from "./quickbooks-cogs.service.js";
-import { syncExpenses } from "./quickbooks-expenses.service.js";
 import { syncInvoices } from "./quickbooks-invoice.service.js";
 import { syncExpenses as syncExpenseTransactions } from "./quickbooks-expense.service.js";
 import { syncBills } from "./quickbooks-bill.service.js";
@@ -26,30 +23,16 @@ export async function syncQuickBooksCompany(companyId: string, entities: Entity[
 
   await companyInfoRes.json();
 
-  // Todo: Remove this when  old rev, exp, cogs tables are removed
-  const startDate = "2024-01-01";
-  const endDate = new Date().toISOString().split("T")[0] as string;
-
-  const pnl = await fetchProfitAndLoss(
-    row.realmId,
-    currentAccessToken,
-    startDate,
-    endDate
-  );
-
   for (const entity of entities) {
     switch (entity) {
       case "revenue":
-        await syncRevenue(companyId, row, endDate, pnl);
-        await syncInvoices(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId, startDate, endDate);
+        await syncInvoices(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId);
         break;
       case "cogs":
-        await syncCogs(companyId, row, endDate, pnl);
-        await syncBills(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId, startDate, endDate);
+        await syncBills(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId);
         break;
       case "expenses":
-        await syncExpenses(companyId, row, endDate, pnl);
-        await syncExpenseTransactions(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId, startDate, endDate);
+        await syncExpenseTransactions(companyId, row.providerId, row.realmId, currentAccessToken, row.connectionId);
         break;
       default:
         console.error(`Unknown entity type: ${entity}`);
@@ -216,15 +199,4 @@ async function fetchQuickBooksCompanyInfo(realmId: string, accessToken: string) 
       console.log(`[QuickBooks CompanyInfo] Retry attempt ${attempt}/3 after ${delayMs}ms. Error: ${error.message}`);
     }
   });
-}
-
-async function fetchProfitAndLoss(
-  realmId: string,
-  accessToken: string,
-  startDate: string,
-  endDate: string
-) {
-  console.log(startDate, endDate);
-  const query = `reports/ProfitAndLoss?start_date=${startDate}&end_date=${endDate}&accounting_method=Accrual`;
-  return quickbooksRequest(realmId, accessToken, query);
 }

@@ -5,7 +5,7 @@ import { upsertProviderSyncStateLastSynced } from "../../lib/queries/provider_sy
 
 export async function syncExpenses(
   companyId: string, providerId: string, realmId: string, accessToken: string, 
-  connectionId: string, startDate: string, endDate: string
+  connectionId: string
 ) {
   const entityType = "expense_transactions";
   
