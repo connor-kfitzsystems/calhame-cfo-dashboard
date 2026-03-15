@@ -16,38 +16,53 @@ export async function syncBills(
   if (lastSyncedAt) {
     console.log(`[Bill Sync] Incremental sync from ${lastSyncedAt.toISOString()}`);
   } else {
-    console.log(`[Bill Sync] Full sync from ${startDate} to ${endDate}`);
+    console.log(`[Bill Sync] Full sync - fetching ALL historical data`);
   }
   
-  const bills = await fetchBills(realmId, accessToken, lastSyncedAt, startDate, endDate);
+  let startPosition = 1;
+  let totalFetched = 0;
+  let pageNumber = 1;
   
-  console.log(`[Bill Sync] Found ${bills.length} bills`);
-  
-  for (const bill of bills) {
-    const billData = parseBill(bill);
-    const lastModifiedAt = bill.MetaData?.LastUpdatedTime || null;
+  while (true) {
+    const bills = await fetchBills(realmId, accessToken, lastSyncedAt, startPosition);
     
-    for (const lineItem of billData.lineItems) {
-      await upsertCogsTransaction(companyId, {
-        providerId,
-        transactionId: `${bill.Id}-${lineItem.lineNum}`,
-        transactionType: 'Bill',
-        transactionNumber: bill.DocNumber || null,
-        transactionDate: bill.TxnDate,
-        vendorId: bill.VendorRef?.value || null,
-        vendorName: bill.VendorRef?.name || null,
-        description: lineItem.description || undefined,
-        accountId: lineItem.accountId || undefined,
-        accountName: lineItem.accountName || undefined,
-        amount: lineItem.amount,
-        providerLastModifiedAt: lastModifiedAt
-      });
+    console.log(`[Bill Sync] Page ${pageNumber}: Found ${bills.length} bills`);
+    
+    for (const bill of bills) {
+      const billData = parseBill(bill);
+      const lastModifiedAt = bill.MetaData?.LastUpdatedTime || null;
+      
+      for (const lineItem of billData.lineItems) {
+        await upsertCogsTransaction(companyId, {
+          providerId,
+          transactionId: `${bill.Id}-${lineItem.lineNum}`,
+          transactionType: 'Bill',
+          transactionNumber: bill.DocNumber || null,
+          transactionDate: bill.TxnDate,
+          vendorId: bill.VendorRef?.value || null,
+          vendorName: bill.VendorRef?.name || null,
+          description: lineItem.description || undefined,
+          accountId: lineItem.accountId || undefined,
+          accountName: lineItem.accountName || undefined,
+          amount: lineItem.amount,
+          providerLastModifiedAt: lastModifiedAt
+        });
+      }
     }
+    
+    totalFetched += bills.length;
+    
+    if (bills.length < 1000) {
+      break;
+    }
+    
+    startPosition += 1000;
+    pageNumber++;
   }
   
   await upsertProviderSyncStateLastSynced(connectionId, entityType);
   
-  console.log(`[Bill Sync] Processed ${bills.length} bills`);
+  console.log(`[Bill Sync] Completed - Total processed: ${totalFetched} bills`);
 }
 
 interface ParsedBill {
@@ -96,8 +111,7 @@ function parseBill(bill: any): ParsedBill {
 }
 
 async function fetchBills(
-  realmId: string, accessToken: string, lastSyncedAt: Date | null,
-  startDate: string, endDate: string
+  realmId: string, accessToken: string, lastSyncedAt: Date | null, startPosition: number = 1
 ) {
   let query: string;
   
@@ -105,7 +119,7 @@ async function fetchBills(
     const lastSyncedISO = lastSyncedAt.toISOString();
     query = `SELECT * FROM Bill WHERE Metadata.LastUpdatedTime > '${lastSyncedISO}' MAXRESULTS 1000`;
   } else {
-    query = `SELECT * FROM Bill WHERE TxnDate >= '${startDate}' AND TxnDate <= '${endDate}' MAXRESULTS 1000`;
+    query = `SELECT * FROM Bill ORDERBY Id MAXRESULTS 1000 STARTPOSITION ${startPosition}`;
   }
   
   const encodedQuery = encodeURIComponent(query);

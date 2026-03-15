@@ -26,7 +26,7 @@ export async function syncQuickBooksCompany(companyId: string, entities: Entity[
 
   await companyInfoRes.json();
 
-  // Todo: Implement pagination and update date ranges
+  // Todo: Remove this when  old rev, exp, cogs tables are removed
   const startDate = "2024-01-01";
   const endDate = new Date().toISOString().split("T")[0] as string;
 

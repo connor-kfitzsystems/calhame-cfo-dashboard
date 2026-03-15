@@ -16,39 +16,54 @@ export async function syncExpenses(
   if (lastSyncedAt) {
     console.log(`[Expense Sync] Incremental sync from ${lastSyncedAt.toISOString()}`);
   } else {
-    console.log(`[Expense Sync] Full sync from ${startDate} to ${endDate}`);
+    console.log(`[Expense Sync] Full sync - fetching ALL historical data`);
   }
   
-  const expenses = await fetchExpenses(realmId, accessToken, lastSyncedAt, startDate, endDate);
+  let startPosition = 1;
+  let totalFetched = 0;
+  let pageNumber = 1;
   
-  console.log(`[Expense Sync] Found ${expenses.length} expenses`);
-  
-  for (const expense of expenses) {
-    const expenseData = parsePurchase(expense);
-    const lastModifiedAt = expense.MetaData?.LastUpdatedTime || null;
+  while (true) {
+    const expenses = await fetchExpenses(realmId, accessToken, lastSyncedAt, startPosition);
     
-    for (const lineItem of expenseData.lineItems) {
-      await upsertExpenseTransaction(companyId, {
-        providerId,
-        transactionId: `${expense.Id}-${lineItem.lineNum}`,
-        transactionType: 'Purchase',
-        transactionNumber: expense.DocNumber || null,
-        transactionDate: expense.TxnDate,
-        vendorId: expense.EntityRef?.value || null,
-        vendorName: expense.EntityRef?.name || null,
-        category: lineItem.category || undefined,
-        description: lineItem.description || undefined,
-        accountId: lineItem.accountId || undefined,
-        accountName: lineItem.accountName || undefined,
-        amount: lineItem.amount,
-        providerLastModifiedAt: lastModifiedAt
-      });
+    console.log(`[Expense Sync] Page ${pageNumber}: Found ${expenses.length} expenses`);
+    
+    for (const expense of expenses) {
+      const expenseData = parsePurchase(expense);
+      const lastModifiedAt = expense.MetaData?.LastUpdatedTime || null;
+      
+      for (const lineItem of expenseData.lineItems) {
+        await upsertExpenseTransaction(companyId, {
+          providerId,
+          transactionId: `${expense.Id}-${lineItem.lineNum}`,
+          transactionType: 'Purchase',
+          transactionNumber: expense.DocNumber || null,
+          transactionDate: expense.TxnDate,
+          vendorId: expense.EntityRef?.value || null,
+          vendorName: expense.EntityRef?.name || null,
+          category: lineItem.category || undefined,
+          description: lineItem.description || undefined,
+          accountId: lineItem.accountId || undefined,
+          accountName: lineItem.accountName || undefined,
+          amount: lineItem.amount,
+          providerLastModifiedAt: lastModifiedAt
+        });
+      }
     }
+    
+    totalFetched += expenses.length;
+    
+    if (expenses.length < 1000) {
+      break;
+    }
+    
+    startPosition += 1000;
+    pageNumber++;
   }
   
   await upsertProviderSyncStateLastSynced(connectionId, entityType);
   
-  console.log(`[Expense Sync] Processed ${expenses.length} expenses`);
+  console.log(`[Expense Sync] Completed - Total processed: ${totalFetched} expenses`);
 }
 
 interface ParsedPurchase {
@@ -101,8 +116,7 @@ function parsePurchase(purchase: any): ParsedPurchase {
 }
 
 async function fetchExpenses(
-  realmId: string, accessToken: string, lastSyncedAt: Date | null,
-  startDate: string, endDate: string
+  realmId: string, accessToken: string, lastSyncedAt: Date | null, startPosition: number = 1
 ) {
   let query: string;
   
@@ -110,7 +124,7 @@ async function fetchExpenses(
     const lastSyncedISO = lastSyncedAt.toISOString();
     query = `SELECT * FROM Purchase WHERE Metadata.LastUpdatedTime > '${lastSyncedISO}' AND PaymentType = 'Cash' MAXRESULTS 1000`;
   } else {
-    query = `SELECT * FROM Purchase WHERE TxnDate >= '${startDate}' AND TxnDate <= '${endDate}' AND PaymentType = 'Cash' MAXRESULTS 1000`;
+    query = `SELECT * FROM Purchase WHERE PaymentType = 'Cash' ORDERBY Id MAXRESULTS 1000 STARTPOSITION ${startPosition}`;
   }
   
   const encodedQuery = encodeURIComponent(query);
