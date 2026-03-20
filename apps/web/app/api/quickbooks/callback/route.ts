@@ -119,11 +119,8 @@ export async function GET(req: NextRequest) {
       }
     
       await accountingQueue.add(SYNC_COMPANY_JOB, { companyId: company.id, provider: "quickbooks", entities: ENTITIES }, {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 60000
-        }
+        removeOnComplete: true,
+        removeOnFail: false
       });
 
       await client.query("COMMIT");
