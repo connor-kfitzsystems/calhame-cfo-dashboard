@@ -10,65 +10,25 @@ import { ACCOUNTING_QUEUE, SYNC_COMPANY_JOB, SCHEDULED_SYNC_JOB } from '@repo/sh
 
 console.log('Worker starting...');
 
-const MAX_ATTEMPTS = 3;
-const BASE_DELAY = 60000;
-
-const accountingQueue = new Queue(ACCOUNTING_QUEUE, { connection: redisConnection });
-
 const worker = new Worker(
   ACCOUNTING_QUEUE,
   async job => {
-    try {
-      switch (job.name) {
-        case SYNC_COMPANY_JOB:
-          await handleSyncCompany(job);
-          break;
+    switch (job.name) {
+      case SYNC_COMPANY_JOB:
+        await handleSyncCompany(job);
+        break;
 
-        case SCHEDULED_SYNC_JOB:
-          await handleScheduledSync();
-          break;
+      case SCHEDULED_SYNC_JOB:
+        await handleScheduledSync();
+        break;
 
-        default:
-          console.warn(`Unknown job: ${job.name}`);
-      }
-    } catch (err) {
-      const attemptsMade = job.data.attemptsMade || 0;
-
-      if (attemptsMade < MAX_ATTEMPTS) {
-        const nextAttempts = attemptsMade + 1;
-        const delay = BASE_DELAY * Math.pow(2, attemptsMade);
-
-        await accountingQueue.add(
-          job.name,
-          {
-            ...job.data,
-            attemptsMade: nextAttempts,
-          },
-          {
-            delay,
-            removeOnComplete: true,
-            removeOnFail: false,
-          }
-        );
-
-        console.warn(
-          `Retrying job ${job.name} in ${delay}ms (attempt ${nextAttempts}/${MAX_ATTEMPTS})`
-        );
-
-        return;
-      }
-
-      console.error(`Job ${job.name} failed after ${MAX_ATTEMPTS} attempts`, err);
-      throw err;
+      default:
+        console.warn(`Unknown job: ${job.name}`);
     }
   },
   {
     connection: redisConnection,
-    drainDelay: 30,
-    concurrency: 2,
-    lockDuration: 60000,
-    stalledInterval: 60000,
-    maxStalledCount: 1
+    concurrency: 5
   }
 );
 
@@ -82,17 +42,26 @@ worker.on('failed', (job, err) => {
     return;
   }
 
-  console.error(`[FINAL FAILURE] Job ${job.id} (${job.name}) failed after all retries`, {
-    jobId: job.id,
-    jobName: job.name,
-    jobData: job.data,
-    error: err.message,
-    stack: err.stack
-  });
+  const attemptInfo = `attempt ${job.attemptsMade}/${job.opts.attempts || 1}`;
+  const isLastAttempt = job.attemptsMade >= (job.opts.attempts || 1);
+  
+  if (isLastAttempt) {
+    console.error(`[FINAL FAILURE] Job ${job.id} exhausted all retries (${attemptInfo})`, {
+      jobId: job.id,
+      jobName: job.name,
+      jobData: job.data,
+      error: err.message,
+      stack: err.stack
+    });
+  } else {
+    console.warn(`[RETRY PENDING] Job ${job.id} failed (${attemptInfo}):`, err.message);
+  }
 });
 
 
 (async () => {
+  const accountingQueue = new Queue(ACCOUNTING_QUEUE, { connection: redisConnection });
+
   await accountingQueue.add(
     SCHEDULED_SYNC_JOB,
     {},
@@ -100,8 +69,7 @@ worker.on('failed', (job, err) => {
       repeat: {
         pattern: '0 2 * * *'
       },
-      jobId: 'daily-sync',
-      removeOnComplete: true
+      jobId: 'daily-sync'
     }
   );
 

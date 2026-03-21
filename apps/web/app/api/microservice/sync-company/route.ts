@@ -17,8 +17,11 @@ export async function POST(req: Request) {
   );
 
   const job = await accountingQueue.add(SYNC_COMPANY_JOB, { companyId, provider, entities }, {
-    removeOnComplete: true,
-    removeOnFail: false
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 60000
+    }
   });
   
   return Response.json(

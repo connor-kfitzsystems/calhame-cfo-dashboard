@@ -16,8 +16,11 @@ export async function handleScheduledSync() {
       provider: 'quickbooks',
       entities: ENTITIES
     }, {
-      removeOnComplete: true,
-      removeOnFail: false
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 60000
+      }
     });
   }
   
