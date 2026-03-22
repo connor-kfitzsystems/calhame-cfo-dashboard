@@ -146,12 +146,29 @@ export function getSyncAvailability(lastSyncedAt: Date | null): {
 
 export function generateURIFromBase(path: string, headers?: Headers): string {
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  if (appUrl) {
+    return `${appUrl}${path}`;
+  }
+
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProductionUrl) {
+    return `https://${vercelProductionUrl}${path}`;
+  }
+
+  if (headers) {
+    const host = headers.get('x-forwarded-host') || headers.get('host');
+    if (host && host.includes('localhost')) {
+      return `http://localhost:3000${path}`;
+    }
+  }
+
   const vercelUrl = process.env.VERCEL_URL;
-  
   if (vercelUrl) {
     return `https://${vercelUrl}${path}`;
   }
-  
+
   if (headers) {
     const host = headers.get('x-forwarded-host') || headers.get('host');
     if (host) {
@@ -159,6 +176,6 @@ export function generateURIFromBase(path: string, headers?: Headers): string {
       return `${protocol}://${host}${path}`;
     }
   }
-  
+
   return `http://localhost:3000${path}`;
 }
