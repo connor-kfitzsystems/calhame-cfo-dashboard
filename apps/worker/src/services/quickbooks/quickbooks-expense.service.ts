@@ -122,9 +122,9 @@ async function fetchExpenses(
   
   if (lastSyncedAt) {
     const lastSyncedISO = lastSyncedAt.toISOString();
-    query = `SELECT * FROM Purchase WHERE Metadata.LastUpdatedTime > '${lastSyncedISO}' AND PaymentType = 'Cash' MAXRESULTS 1000`;
+    query = `SELECT * FROM Purchase WHERE Metadata.LastUpdatedTime > '${lastSyncedISO}' MAXRESULTS 1000`;
   } else {
-    query = `SELECT * FROM Purchase WHERE PaymentType = 'Cash' ORDERBY Id MAXRESULTS 1000 STARTPOSITION ${startPosition}`;
+    query = `SELECT * FROM Purchase ORDERBY Id MAXRESULTS 1000 STARTPOSITION ${startPosition}`;
   }
   
   const encodedQuery = encodeURIComponent(query);
