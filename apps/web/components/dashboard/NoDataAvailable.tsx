@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 
 interface NoDataAvailableProps {
+  companyId: string;
   year: number;
   quarter: string;
   availableYears: number[];
   message?: string;
 }
 
-export default function NoDataAvailable({ year, quarter, availableYears, message }: NoDataAvailableProps) {
+export default function NoDataAvailable({ companyId, year, quarter, availableYears, message }: NoDataAvailableProps) {
   const defaultMessage = `No data available for ${quarter === "year" ? "full year" : quarter.toUpperCase()} ${year}`;
   
   return (
@@ -29,15 +30,18 @@ export default function NoDataAvailable({ year, quarter, availableYears, message
         </CardDescription>
       </CardHeader>
 
-      {availableYears.length > 0 && (
-        <CardContent>
-          <Button asChild variant="outline">
-            <Link href={`/dashboard?quarter=year&year=${availableYears[0]}`}>
-              View {availableYears[0]} Data
-            </Link>
-          </Button>
-        </CardContent>
-      )}
+      {availableYears.length > 0
+        ? <CardContent className="flex flex-wrap gap-2">
+            {availableYears.map((availableYear) => (
+              <Button key={availableYear} asChild variant="outline">
+                <Link href={`/dashboard/${companyId}?year=${availableYear}`}>
+                  View {availableYear} Data
+                </Link>
+              </Button>
+            ))}
+          </CardContent>
+        : null
+      }
     </Card>
   );
 }

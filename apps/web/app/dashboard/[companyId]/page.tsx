@@ -38,6 +38,7 @@ export default async function DynamicDashboardPage({ params, searchParams }: {
       {!hasData
         ? <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
             <NoDataAvailable 
+              companyId={companyId}
               year={yearValue} 
               quarter={quarterValue} 
               availableYears={dashboardData.years}
